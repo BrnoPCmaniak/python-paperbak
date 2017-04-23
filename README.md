@@ -5,7 +5,8 @@ This project aims to port https://github.com/Rupan/paperbak into python cross-pl
 ## Current state:
 
 * Old code now lies inside `old_cpp`
-* All code which doesn't depend on borderland will be copied and ported into normal c++ in `new_cpp` folder
+* All code which doesn't depend on borderland ~~will~~ might be copied and ported into normal c++ in `new_cpp` folder
+* Some basic structure starts to form in `python` so far crc and Reed-Solomon encoding works.
 
 If you like this project please consider donation:
 
