@@ -28,135 +28,14 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <windows.h>
-#include <commctrl.h>
 #include <stdio.h>
-#include <direct.h>
 #include <math.h>
-#include "twain.h"
-#include "CRYPTO/aes.h"
-#include "CRYPTO/pwd2key.h"
+// #include "CRYPTO/aes.h"
+// #include "CRYPTO/pwd2key.h"
 #pragma hdrstop
 
 #include "paperbak.h"
-#include "resource.h"
-
-// Initializes printer settings. This operation is done blindly, without
-// displaying any dialogs. Call once during startup.
-void Initializeprintsettings(void) {
-  int i,nres,res[64][2];
-  DEVMODE *pdevmode;
-  DEVNAMES *pdevnames;
-  // Get default printer page settings.
-  if (pagesetup.lStructSize==0) {
-    memset(&pagesetup,0,sizeof(PAGESETUPDLG));
-    pagesetup.lStructSize=sizeof(PAGESETUPDLG);
-    pagesetup.hwndOwner=hwmain;
-    pagesetup.hDevMode=NULL;
-    pagesetup.hDevNames=NULL;
-    pagesetup.rtMinMargin.left=0;
-    pagesetup.rtMinMargin.right=0;
-    pagesetup.rtMinMargin.top=0;
-    pagesetup.rtMinMargin.bottom=0;
-    pagesetup.rtMargin.left=marginleft;
-    pagesetup.rtMargin.right=marginright;
-    pagesetup.rtMargin.top=margintop;
-    pagesetup.rtMargin.bottom=marginbottom;
-    pagesetup.Flags=PSD_RETURNDEFAULT|PSD_NOWARNING|PSD_MINMARGINS;
-    if (marginunits==1)
-      pagesetup.Flags|=PSD_INTHOUSANDTHSOFINCHES|PSD_MARGINS;
-    else if (marginunits==2)
-      pagesetup.Flags|=PSD_INHUNDREDTHSOFMILLIMETERS|PSD_MARGINS;
-    PageSetupDlg(&pagesetup); };
-  // By system default, all margins are usually set to 1 inch. This means too
-  // much space is excluded from data carrying. So when all margins are 1 inch,
-  // I set them to more sound values.
-  if (pagesetup.Flags & PSD_INTHOUSANDTHSOFINCHES) {
-    if (pagesetup.rtMargin.left==1000 &&
-      pagesetup.rtMargin.right==1000 &&
-      pagesetup.rtMargin.top==1000 &&
-      pagesetup.rtMargin.bottom==1000
-    ) {
-      pagesetup.rtMargin.right=400;
-      pagesetup.rtMargin.top=400;
-      pagesetup.rtMargin.bottom=500;
-    }; }
-  else if (pagesetup.Flags & PSD_INHUNDREDTHSOFMILLIMETERS) {
-    if (pagesetup.rtMargin.left==2500 &&
-      pagesetup.rtMargin.right==2500 &&
-      pagesetup.rtMargin.top==2500 &&
-      pagesetup.rtMargin.bottom==2500
-    ) {
-      pagesetup.rtMargin.right=1000;
-      pagesetup.rtMargin.top=1000;
-      pagesetup.rtMargin.bottom=1250;
-    };
-  };
-  // Even if I set preferred dmPrintQuality to high, some printer drivers
-  // select lower resolution than physically available. Let's try to correct
-  // this... er... feature.
-  resx=resy=0;
-  if (pagesetup.hDevNames!=NULL) {
-    pdevnames=(DEVNAMES *)GlobalLock(pagesetup.hDevNames);
-    if (pdevnames!=NULL) {
-      // Ask for the length of the list of supported resolutions.
-      nres=DeviceCapabilities((char *)pdevnames+pdevnames->wDeviceOffset,
-        (char *)pdevnames+pdevnames->wOutputOffset,
-        DC_ENUMRESOLUTIONS,NULL,NULL);
-      // Ask for the resolutions. I'm to lazy to allocate the memory
-      // dynamically and assume that no sound driver will support more than 64
-      // different resolutions.
-      if (nres>0 && nres<=64) {
-        DeviceCapabilities((char *)pdevnames+pdevnames->wDeviceOffset,
-        (char *)pdevnames+pdevnames->wOutputOffset,
-        DC_ENUMRESOLUTIONS,(char *)res,NULL);
-        for (i=0; i<nres; i++) {
-          if (res[i][0]>=resx && res[i][1]>=resy) {
-            resx=res[i][0]; resy=res[i][1];
-          };
-        };
-      };
-      GlobalUnlock(pagesetup.hDevNames);
-    };
-  };
-  // Set up preferred printer defaults.
-  if (pagesetup.hDevMode==NULL)
-    pagesetup.hDevMode=GlobalAlloc(GHND,sizeof(DEVMODE));
-  pdevmode=(DEVMODE *)GlobalLock(pagesetup.hDevMode);
-  if (pdevmode!=NULL) {
-    pdevmode->dmSize=sizeof(DEVMODE);
-    pdevmode->dmFields|=DM_PRINTQUALITY|DM_COLOR|DM_DITHERTYPE;
-    if (resx==0 || resy==0)
-      pdevmode->dmPrintQuality=DMRES_HIGH;
-    else {
-      pdevmode->dmFields|=DM_YRESOLUTION;
-      pdevmode->dmPrintQuality=(short)resx;
-      pdevmode->dmYResolution=(short)resy; };
-    pdevmode->dmColor=DMCOLOR_MONOCHROME;
-    pdevmode->dmDitherType=DMDITHER_LINEART;
-    GlobalUnlock(pagesetup.hDevMode);
-  };
-};
-
-// Frees resources allocated by printing routines.
-void Closeprintsettings(void) {
-  if ((pagesetup.hDevMode)!=NULL)
-    GlobalFree(pagesetup.hDevMode);
-  if ((pagesetup.hDevNames)!=NULL)
-    GlobalFree(pagesetup.hDevNames);
-  ;
-};
-
-// Displays dialog asking to enter page borders. I assume that the structure
-// pagesetup is already initialized by call to Initializeprintsettings().
-void Setuppage(void) {
-  pagesetup.rtMinMargin.left=0;
-  pagesetup.rtMinMargin.right=0;
-  pagesetup.rtMinMargin.top=0;
-  pagesetup.rtMinMargin.bottom=0;
-  pagesetup.Flags=PSD_MARGINS|PSD_MINMARGINS;
-  PageSetupDlg(&pagesetup);
-};
+#include "Resource.h"
 
 // Service function, puts block of data to bitmap as a grid of 32x32 dots in
 // the position with given index. Bitmap is treated as a continuous line of
@@ -503,7 +382,6 @@ static void Initializeprinting(t_printdata *print) {
   char fil[MAXPATH],nam[MAXFILE],ext[MAXEXT],jobname[TEXTLEN];
   BITMAPINFO *pbmi;
   SIZE extent;
-  PRINTDLG printdlg;
   DOCINFO dinfo;
   DEVNAMES *pdevnames;
   // Prepare superdata.
@@ -530,33 +408,7 @@ static void Initializeprinting(t_printdata *print) {
   // the king (well, a sort of).
   if (print->outbmp[0]=='\0') {
     // Open standard Print dialog box.
-    memset(&printdlg,0,sizeof(PRINTDLG));
-    printdlg.lStructSize=sizeof(PRINTDLG);
-    printdlg.hwndOwner=hwmain;
-    printdlg.hDevMode=pagesetup.hDevMode;
-    printdlg.hDevNames=pagesetup.hDevNames;
-    printdlg.hDC=NULL;                 // Returns DC
-    printdlg.Flags=PD_ALLPAGES|PD_RETURNDC|PD_NOSELECTION|PD_PRINTSETUP;
-    printdlg.nFromPage=1;              // It's hard to calculate the number of
-    printdlg.nToPage=9999;             // pages in advance.
-    printdlg.nMinPage=1;
-    printdlg.nMaxPage=9999;
-    printdlg.nCopies=1;
-    printdlg.hInstance=hinst;
-    success=PrintDlg(&printdlg);
-    // Save important information.
-    print->dc=printdlg.hDC;
-    print->frompage=printdlg.nFromPage-1;
-    print->topage=printdlg.nToPage-1;
-    // Clean up to prevent memory leaks.
-    if (pagesetup.hDevMode==NULL)
-      pagesetup.hDevMode=printdlg.hDevMode;
-    else if (printdlg.hDevMode!=pagesetup.hDevMode)
-      GlobalFree(printdlg.hDevMode);
-    if (pagesetup.hDevNames==NULL)
-      pagesetup.hDevNames=printdlg.hDevNames;
-    else if (printdlg.hDevNames!=pagesetup.hDevNames)
-      GlobalFree(printdlg.hDevNames);
+    // REMOVED
     // Analyse results.
     if (success==0) {                  // User cancelled printing
       Message("",0);
@@ -623,15 +475,9 @@ static void Initializeprinting(t_printdata *print) {
       print->ppix=300; print->ppiy=300; }
     else {
       print->ppix=resx; print->ppiy=resy; };
-    if (pagesetup.Flags & PSD_INTHOUSANDTHSOFINCHES) {
-      width=pagesetup.ptPaperSize.x*print->ppix/1000;
-      height=pagesetup.ptPaperSize.y*print->ppiy/1000; }
-    else if (pagesetup.Flags & PSD_INHUNDREDTHSOFMILLIMETERS) {
-      width=pagesetup.ptPaperSize.x*print->ppix/2540;
-      height=pagesetup.ptPaperSize.y*print->ppiy/2540; }
-    else {                             // Use default A4 size (210x292 mm)
-      width=print->ppix*8270/1000;
-      height=print->ppiy*11690/1000; };
+    // Use default A4 size (210x292 mm)
+    width=print->ppix*8270/1000;
+    height=print->ppiy*11690/1000;
     print->hfont6=NULL;
     print->hfont10=NULL;
     print->extratop=print->extrabottom=0;
@@ -639,21 +485,10 @@ static void Initializeprinting(t_printdata *print) {
     // bitmap are dark gray.
     print->black=64; };
   // Calculate page borders in the pixels of printer's resolution.
-  if (pagesetup.Flags & PSD_INTHOUSANDTHSOFINCHES) {
-    print->borderleft=pagesetup.rtMargin.left*print->ppix/1000;
-    print->borderright=pagesetup.rtMargin.right*print->ppix/1000;
-    print->bordertop=pagesetup.rtMargin.top*print->ppiy/1000;
-    print->borderbottom=pagesetup.rtMargin.bottom*print->ppiy/1000; }
-  else if (pagesetup.Flags & PSD_INHUNDREDTHSOFMILLIMETERS) {
-    print->borderleft=pagesetup.rtMargin.left*print->ppix/2540;
-    print->borderright=pagesetup.rtMargin.right*print->ppix/2540;
-    print->bordertop=pagesetup.rtMargin.top*print->ppiy/2540;
-    print->borderbottom=pagesetup.rtMargin.bottom*print->ppiy/2540; }
-  else {
-    print->borderleft=print->ppix;
-    print->borderright=print->ppix/2;
-    print->bordertop=print->ppiy/2;
-    print->borderbottom=print->ppiy/2; }
+  print->borderleft=print->ppix;
+  print->borderright=print->ppix/2;
+  print->bordertop=print->ppiy/2;
+  print->borderbottom=print->ppiy/2;
   // Calculate size of printable area, in the pixels of printer's resolution.
   width-=
     print->borderleft+print->borderright;
@@ -741,10 +576,7 @@ static void Initializeprinting(t_printdata *print) {
   print->ny=ny;
   // Start printing.
   if (print->outbmp[0]=='\0') {
-    if (pagesetup.hDevNames!=NULL)
-      pdevnames=(DEVNAMES *)GlobalLock(pagesetup.hDevNames);
-    else
-      pdevnames=NULL;
+    pdevnames=NULL;
     memset(&dinfo,0,sizeof(DOCINFO));
     dinfo.cbSize=sizeof(DOCINFO);
     sprintf(jobname,"PaperBack - %.64s",print->superdata.name);
@@ -754,8 +586,6 @@ static void Initializeprinting(t_printdata *print) {
     else
       dinfo.lpszOutput=(char *)pdevnames+pdevnames->wOutputOffset;
     success=StartDoc(print->dc,&dinfo);
-    if (pdevnames!=NULL)
-      GlobalUnlock(pagesetup.hDevNames);
     if (success<=0) {
       Reporterror("Unable to print");
       Stopprinting(print);
