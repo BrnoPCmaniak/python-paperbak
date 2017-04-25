@@ -5,12 +5,12 @@ from crc16 import crc16
 from dtypes import FileTime
 from ecc import encode8
 from type_checking import auto_attr_check
+from utils import hex
 
 
 @auto_attr_check
 class Data(object):
     """Block on paper.
-
     Structure:
     address np.uint32 - Offset of the block or special code
     data        bytes - Useful data. Max size constants.NDATA
@@ -147,3 +147,23 @@ class SuperData(object):
         """Calculate Reed-Solomon's error correction code."""
         assert self.crc != None
         self.ecc = encode8(self.tobytes(with_crc=True))
+
+
+if __name__ == '__main__':
+    from crc16 import __TEST_DATA
+
+    # TEST DATA
+    d = Data()
+    d.address = 15
+    print("address:", d.address)
+    d.data = __TEST_DATA
+    print("BLOCK")
+    bytes_ = d.tobytes()
+    for i in range(len(bytes_)):
+        print(i, hex(bytes_[i]))
+    d.calc_crc()
+    print("CRC:", d.crc)
+    d.calc_ecc()
+    print("ECC:")
+    for i in range(32):
+        print(i, hex(d.ecc[i]))
