@@ -1,18 +1,11 @@
-// http://stackoverflow.com/a/673389/2629036
+// http://stackoverflow.com/a/37250459/2629036
 #include <iostream>
-#include <stdio.h>
-struct HexCharStruct
-{
-  unsigned char c;
-  HexCharStruct(unsigned char _c) : c(_c) { }
-};
+#include <iomanip>
 
-inline std::ostream& operator<<(std::ostream& o, const HexCharStruct& hs)
+template <typename T>
+std::string HexToString(T uval)
 {
-  return (o << std::hex << (int)hs.c);
-}
-
-inline HexCharStruct hex(unsigned char _c)
-{
-  return HexCharStruct(_c);
+    std::stringstream ss;
+    ss << "0x" << std::setw(sizeof(uval) * 2) << std::setfill('0') << std::hex << +uval;
+    return ss.str();
 }

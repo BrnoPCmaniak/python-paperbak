@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]) {
         cout << "HIGH: " << ft.dwHighDateTime << endl;
         unsigned char *pft = (unsigned char *)&ft;
         for (int i = 0; i < 8; i++) {
-                cout << i << " " << hex(pft[i]) << endl;
+                cout << i << " " << HexToString(pft[i]) << endl;
         };
         return 0;
 }
