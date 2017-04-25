@@ -38,7 +38,7 @@
 typedef unsigned char  uchar;
 typedef unsigned short ushort;
 typedef unsigned int   uint;
-typedef unsigned long  ulong;
+//typedef unsigned long  ulong; ulong->DWORD officialy long, but linux long have 8 instead of 4 bytes
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ typedef unsigned long  ulong;
 #define NGROUPMAX      10
 
 typedef struct t_data {                // Block on paper
-  ulong          addr;                 // Offset of the block or special code
+  DWORD          addr;                 // Offset of the block or special code
   uchar          data[NDATA];          // Useful data
   ushort         crc;                  // Cyclic redundancy of addr and data
   uchar          ecc[32];              // Reed-Solomon's error correction code
@@ -65,10 +65,10 @@ typedef struct t_data {                // Block on paper
 #define PBM_ENCRYPTED  0x02            // Paper backup is encrypted
 
 typedef struct t_superdata {           // Identification block on paper
-  ulong          addr;                 // Expecting SUPERBLOCK
-  ulong          datasize;             // Size of (compressed) data
-  ulong          pagesize;             // Size of (compressed) data on page
-  ulong          origsize;             // Size of original (uncompressed) data
+  DWORD          addr;                 // Expecting SUPERBLOCK
+  DWORD          datasize;             // Size of (compressed) data
+  DWORD          pagesize;             // Size of (compressed) data on page
+  DWORD          origsize;             // Size of original (uncompressed) data
   uchar          mode;                 // Special mode bits, set of PBM_xxx
   uchar          attributes;           // Basic file attributes
   ushort         page;                 // Actual page (1-based)
@@ -80,21 +80,21 @@ typedef struct t_superdata {           // Identification block on paper
 } t_superdata;
 
 typedef struct t_block {               // Block in memory
-  ulong          addr;                 // Offset of the block
-  ulong          recsize;              // 0 for data, or length of covered data
+  DWORD          addr;                 // Offset of the block
+  DWORD          recsize;              // 0 for data, or length of covered data
   uchar          data[NDATA];          // Useful data
 } t_block;
 
 typedef struct t_superblock {          // Identification block in memory
-  ulong          addr;                 // Expecting SUPERBLOCK
-  ulong          datasize;             // Size of (compressed) data
-  ulong          pagesize;             // Size of (compressed) data on page
-  ulong          origsize;             // Size of original (uncompressed) data
-  ulong          mode;                 // Special mode bits, set of PBM_xxx
+  DWORD          addr;                 // Expecting SUPERBLOCK
+  DWORD          datasize;             // Size of (compressed) data
+  DWORD          pagesize;             // Size of (compressed) data on page
+  DWORD          origsize;             // Size of original (uncompressed) data
+  DWORD          mode;                 // Special mode bits, set of PBM_xxx
   ushort         page;                 // Actual page (1-based)
   FILETIME       modified;             // Time of last file modification
-  ulong          attributes;           // Basic file attributes
-  ulong          filecrc;              // 16-bit CRC of decrypted packed file
+  DWORD          attributes;           // Basic file attributes
+  DWORD          filecrc;              // 16-bit CRC of decrypted packed file
   char           name[64];             // File name - may have all 64 chars
   int            ngroup;               // Actual NGROUP on the page
 } t_superblock;
@@ -123,19 +123,19 @@ typedef struct t_printdata {           // Print control structure
   char           outbmp[MAXPATH];      // Name of output bitmap (empty: paper)
   HANDLE         hfile;                // Handle of input file
   FILETIME       modified;             // Time of last file modification
-  ulong          attributes;           // File attributes
-  ulong          origsize;             // Original file size, bytes
-  ulong          readsize;             // Amount of data read from file so far
-  ulong          datasize;             // Size of (compressed) data
-  ulong          alignedsize;          // Data size aligned to next 16 bytes
-  ulong          pagesize;             // Size of (compressed) data on page
+  DWORD          attributes;           // File attributes
+  DWORD          origsize;             // Original file size, bytes
+  DWORD          readsize;             // Amount of data read from file so far
+  DWORD          datasize;             // Size of (compressed) data
+  DWORD          alignedsize;          // Data size aligned to next 16 bytes
+  DWORD          pagesize;             // Size of (compressed) data on page
   int            compression;          // 0: none, 1: fast, 2: maximal
   int            encryption;           // 0: none, 1: encrypt
   int            printheader;          // Print header and footer
   int            printborder;          // Print border around bitmap
   int            redundancy;           // Redundancy
   uchar          *buf;                 // Buffer for compressed file
-  ulong          bufsize;              // Size of buf, bytes
+  DWORD          bufsize;              // Size of buf, bytes
   uchar          *readbuf;             // Read buffer, PACKLEN bytes long
   bz_stream      bzstream;             // Compression control structure
   int            bufcrc;               // 16-bit CRC of (packed) data in buf
@@ -244,18 +244,18 @@ typedef struct t_fproc {               // Descriptor of processed file
   // General file data.
   char           name[64];             // File name - may have all 64 chars
   FILETIME       modified;             // Time of last file modification
-  ulong          attributes;           // Basic file attrributes
-  ulong          datasize;             // Size of (compressed) data
-  ulong          pagesize;             // Size of (compressed) data on page
-  ulong          origsize;             // Size of original (uncompressed) data
-  ulong          mode;                 // Special mode bits, set of PBM_xxx
+  DWORD          attributes;           // Basic file attrributes
+  DWORD          datasize;             // Size of (compressed) data
+  DWORD          pagesize;             // Size of (compressed) data on page
+  DWORD          origsize;             // Size of original (uncompressed) data
+  DWORD          mode;                 // Special mode bits, set of PBM_xxx
   int            npages;               // Total number of pages
-  ulong          filecrc;              // 16-bit CRC of decrypted packed file
+  DWORD          filecrc;              // 16-bit CRC of decrypted packed file
   // Properties of currently processed page.
   int            page;                 // Currently processed page
   int            ngroup;               // Actual NGROUP on the page
-  ulong          minpageaddr;          // Minimal address of block on page
-  ulong          maxpageaddr;          // Maximal address of block on page
+  DWORD          minpageaddr;          // Minimal address of block on page
+  DWORD          maxpageaddr;          // Maximal address of block on page
   // Gathered data.
   int            nblock;               // Total number of data blocks
   int            ndata;                // Number of decoded blocks so far
@@ -264,7 +264,7 @@ typedef struct t_fproc {               // Descriptor of processed file
   // Statistics.
   int            goodblocks;           // Total number of good blocks read
   int            badblocks;            // Total number of unreadable blocks
-  ulong          restoredbytes;        // Total number of bytes restored by ECC
+  DWORD          restoredbytes;        // Total number of bytes restored by ECC
   int            recoveredblocks;      // Total number of recovered blocks
   int            rempages[8];          // 1-based list of remaining pages
 } t_fproc;
@@ -274,7 +274,7 @@ unique t_fproc   fproc[NFILE];         // Processed files
 void   Closefproc(int slot);
 int    Startnextpage(t_superblock *superblock);
 int    Addblock(t_block *block,int slot);
-int    Finishpage(int slot,int ngood,int nbad,ulong nrestored);
+int    Finishpage(int slot,int ngood,int nbad,DWORD nrestored);
 int    Saverestoredfile(int slot,int force);
 
 
