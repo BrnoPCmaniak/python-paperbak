@@ -186,3 +186,13 @@ class SuperData(object):
         d.crc = parsed["crc"]
         d.ecc = bytes(parsed["ecc"])
         return d
+
+    def __eq__(self, other):
+        return (
+            self.address == other.address and self.datasize == other.datasize and
+            self.pagesize == other.pagesize and self.origsize == other.origsize and
+            self.mode == other.mode and self.attributes == other.attributes and
+            self.page == other.page and self.modified == other.modified and
+            self.filecrc == other.filecrc and self.name == other.name and self.crc == other.crc and
+            self.ecc == other.ecc
+        )
