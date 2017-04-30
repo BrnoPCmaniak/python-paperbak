@@ -54,7 +54,7 @@ class Data(object):
 
     def calc_ecc(self):
         """Calculate Reed-Solomon's error correction code."""
-        assert self.crc != None
+        assert self.crc != None, "CRC not calculated yet."
         self.ecc = encode8(self.tobytes(with_crc=True))
 
     @classmethod
@@ -63,9 +63,9 @@ class Data(object):
         d = cls()
         parsed = np.frombuffer(bytes_, dtype=cls.dt)[0]
         d.address = parsed["address"]
-        d.data = bytes(list(parsed["data"]))
+        d.data = bytes(parsed["data"])
         d.crc = parsed["crc"]
-        d.ecc = bytes(list(parsed["ecc"]))
+        d.ecc = bytes(parsed["ecc"])
         return d
 
 
@@ -110,17 +110,31 @@ class SuperData(object):
     PBM_COMPRESSED = 0x01
     PBM_ENCRYPTED = 0x02
 
+    dt = np.dtype([
+        ("address", np.uint32, 1), ("datasize", np.uint32, 1), ("pagesize", np.uint32, 1),
+        ("origsize", np.uint32, 1), ("mode", np.uint8, 1), ("attributes", np.uint8, 1),
+        ("page", np.uint16, 1), ("modified", FileTime, 1), ("filecrc", np.uint16, 1),
+        ("name", np.uint8, 64), ("crc", np.uint16, 1), ("ecc", np.uint8, 32)])
+
     @property
     def mode(self):
         """Return byte of PBM_*** flags."""
         out = np.uint8(0)
         if self.pbm_encrypted:
-            out |= self.PBM_ENCRYPTED
+            out |= np.uint8(self.PBM_ENCRYPTED)
         if self.pbm_compressed:
-            out |= self.PBM_COMPRESSED
+            out |= np.uint8(self.PBM_COMPRESSED)
         return out
 
     def tobytes(self, with_crc=False, with_ecc=False):
+        """Convert datastructure into bytes.
+
+        :param with_crc: Include Cyclic redundancy
+        :type  with_crc: bool
+        :param with_ecc: Include error correction code
+        :type  with_ecc: bool
+        :rtype: bytes
+        """
         out = self.address.tobytes()
         out += (self.datasize or np.uint32(0)).tobytes()
         out += (self.pagesize or np.uint32(0)).tobytes()
@@ -145,8 +159,30 @@ class SuperData(object):
 
     def calc_ecc(self):
         """Calculate Reed-Solomon's error correction code."""
-        assert self.crc != None
+        assert self.crc != None, "CRC not calculated yet."
         self.ecc = encode8(self.tobytes(with_crc=True))
+
+    @classmethod
+    def frombytes(cls, bytes_):
+        """Parse structure from bytes."""
+        d = cls()
+        parsed = np.frombuffer(bytes_, dtype=cls.dt)[0]
+        assert d.address == parsed["address"], "Adress of superdata doesn't match."
+        d.datasize = parsed["datasize"]
+        d.pagesize = parsed["pagesize"]
+        d.origsize = parsed["origsize"]
+        d.pbm_compressed = (
+            parsed["mode"] & np.uint8(cls.PBM_COMPRESSED) == np.uint8(cls.PBM_COMPRESSED))
+        d.pbm_encrypted = (
+            parsed["mode"] & np.uint8(cls.PBM_ENCRYPTED) == np.uint8(cls.PBM_ENCRYPTED))
+        d.attributes = parsed["attributes"]
+        d.page = parsed["page"]
+        d.modified = parsed["modified"]
+        d.filecrc = parsed["filecrc"]
+        d.name = bytes(parsed["name"]).decode("utf8").strip("\x00")
+        d.crc = parsed["crc"]
+        d.ecc = bytes(parsed["ecc"])
+        return d
 
 
 if __name__ == '__main__':
