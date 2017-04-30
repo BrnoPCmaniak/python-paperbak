@@ -5,7 +5,6 @@ from paperbak.crc16 import crc16
 from paperbak.dtypes import FileTime
 from paperbak.ecc import encode8
 from paperbak.type_checking import auto_attr_check
-from paperbak.utils import hex
 
 
 @auto_attr_check
