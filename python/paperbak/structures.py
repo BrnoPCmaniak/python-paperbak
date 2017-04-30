@@ -1,11 +1,11 @@
 import numpy as np
 
-from constants import NDATA, SUPERBLOCK
-from crc16 import crc16
-from dtypes import FileTime
-from ecc import encode8
-from type_checking import auto_attr_check
-from utils import hex
+from paperbak.constants import NDATA, SUPERBLOCK
+from paperbak.crc16 import crc16
+from paperbak.dtypes import FileTime
+from paperbak.ecc import encode8
+from paperbak.type_checking import auto_attr_check
+from paperbak.utils import hex
 
 
 @auto_attr_check
@@ -29,7 +29,7 @@ class Data(object):
     dt = np.dtype([("address", np.uint32, 1), ("data", np.uint8, 90),
                    ("crc", np.uint16, 1), ("ecc", np.uint8, 32)])
 
-    def tobytes(self, with_crc=False, with_ecc=False):
+    def tobytes(self, with_crc=True, with_ecc=True):
         """Convert datastructure into bytes.
 
         :param with_crc: Include Cyclic redundancy
@@ -50,12 +50,12 @@ class Data(object):
 
     def calc_crc(self):
         """Calculate cyclic redundancy of addr and data."""
-        self.crc = crc16(self.tobytes()) ^ 0x55AA
+        self.crc = crc16(self.tobytes(False, False)) ^ 0x55AA
 
     def calc_ecc(self):
         """Calculate Reed-Solomon's error correction code."""
         assert self.crc != None, "CRC not calculated yet."
-        self.ecc = encode8(self.tobytes(with_crc=True))
+        self.ecc = encode8(self.tobytes(with_ecc=False))
 
     @classmethod
     def frombytes(cls, bytes_):
@@ -67,6 +67,10 @@ class Data(object):
         d.crc = parsed["crc"]
         d.ecc = bytes(parsed["ecc"])
         return d
+
+    def __eq__(self, other):
+        return self.address == other.address and self.data == other.data and self.crc == other.crc \
+            and self.ecc == other.ecc
 
 
 @auto_attr_check
