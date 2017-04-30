@@ -16,7 +16,3 @@ class TestCRC16(unittest.TestCase):
     def test_type(self):
         """Test CRC16 return correct data type."""
         self.assertEqual(type(crc16.crc16(bytes(TEST_DATA))), np.uint16)
-
-
-if __name__ == '__main__':
-    unittest.main()

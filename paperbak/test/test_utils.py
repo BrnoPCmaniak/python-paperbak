@@ -16,6 +16,3 @@ class TestUtilsFunctions(unittest.TestCase):
     def test_hex_255(self):
         """Test output of hex(255),"""
         self.assertEqual("0xff", utils.hex(255))
-
-if __name__ == '__main__':
-    unittest.main()

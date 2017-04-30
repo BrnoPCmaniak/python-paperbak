@@ -20,7 +20,3 @@ class TestFileTime(unittest.TestCase):
         data = bytes([0x00, 0xc0, 0xb0, 0xfe, 0xc1, 0x63, 0xd2, 0x01])
         date = datetime.fromtimestamp(1483228800)
         self.assertEqual(FileTime(date).tobytes(), data)
-
-
-if __name__ == '__main__':
-    unittest.main()
