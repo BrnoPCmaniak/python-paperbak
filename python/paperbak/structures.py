@@ -187,23 +187,3 @@ class SuperData(object):
         d.crc = parsed["crc"]
         d.ecc = bytes(parsed["ecc"])
         return d
-
-
-if __name__ == '__main__':
-    from crc16 import __TEST_DATA
-
-    # TEST DATA
-    d = Data()
-    d.address = 15
-    print("address:", d.address)
-    d.data = __TEST_DATA
-    print("BLOCK")
-    bytes_ = d.tobytes()
-    for i in range(len(bytes_)):
-        print(i, hex(bytes_[i]))
-    d.calc_crc()
-    print("CRC:", d.crc)
-    d.calc_ecc()
-    print("ECC:")
-    for i in range(32):
-        print(i, hex(d.ecc[i]))

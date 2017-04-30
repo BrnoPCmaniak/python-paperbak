@@ -93,3 +93,6 @@ class TestData(unittest.TestCase):
         self.data.calc_crc()
         self.data.calc_ecc()
         self.assertEqual(self.data, Data.frombytes(self.data.tobytes()))
+
+if __name__ == '__main__':
+    unittest.main()
