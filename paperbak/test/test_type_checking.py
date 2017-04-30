@@ -164,12 +164,23 @@ class TestAutoAttrCheckDecorator(unittest.TestCase):
         self.assertEqual(self.cls_inst.type_5, np.uint8(15))
         self.assertEqual(type(self.cls_inst.type_5), np.uint8)
 
-    def test_wrong_params(self):
+    def test_wrong_params_tupple(self):
         """Test that AttributeError is raised with incorrect params dictionary."""
         class TestWrongParams(object):
             params = {
                 "correct": np.uint8,
                 "incorrect": (1,2,3,4)
+            }
+
+        with self.assertRaises(AttributeError):
+            auto_attr_check(TestWrongParams)
+
+    def test_wrong_params(self):
+        """Test that AttributeError is raised with incorrect params dictionary."""
+        class TestWrongParams(object):
+            params = {
+                "correct": np.uint8,
+                "incorrect": 1
             }
 
         with self.assertRaises(AttributeError):
