@@ -20,7 +20,7 @@ int main(int argc, char const *argv[]) {
   block.pagesize = 1;
   block.origsize = 90;
   block.mode = 1;
-  block.attributes = 5;
+  block.attributes = 0x80;
   block.page = 1;
   block.filecrc = 31055;
   memset(block.name, 0, 64); // on python there will be all zeros if empty

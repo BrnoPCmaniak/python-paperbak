@@ -82,7 +82,8 @@ class SuperData(object):
     pagesize  np.uint32 - Size of (compressed) data on page
     origsize  np.uint32 - Size of original (uncompressed) data
     mode       np.uint8 - Special mode bits, set of PBM_xxx
-    attributes np.uint8 - Basic file attributes
+    attributes np.uint8 - Basic windows file attributes. If current system is not Windows this
+                          should be set to FILE_ATTRIBUTE_NORMAL 0x80
     page      np.uint16 - Actual page (1-based)
     modified   FileTime - Time of last file modification
     filecrc   np.uint16 - CRC of compressed decrypted file
@@ -94,6 +95,11 @@ class SuperData(object):
     pbm_compressed bool(False) - Paper backup is compressed
     pbm_encrypted  bool(False) - Paper backup is encrypted
     """
+    PBM_COMPRESSED = 0x01
+    PBM_ENCRYPTED = 0x02
+    FILE_ATTRIBUTE_NORMAL = 0x80
+
+
     address = np.uint32(SUPERBLOCK)
     params = {
         "address": False,
@@ -102,7 +108,7 @@ class SuperData(object):
         "origsize": np.uint32,
         "pbm_compressed": (bool, False, False),
         "pbm_encrypted": (bool, False, False),
-        "attributes": np.uint8,
+        "attributes": (np.uint8, np.uint8(FILE_ATTRIBUTE_NORMAL)),
         "page": np.uint16,
         "modified": FileTime,
         "filecrc": np.uint16,
@@ -110,8 +116,6 @@ class SuperData(object):
         "crc": np.uint16,
         "ecc": bytes,
     }
-    PBM_COMPRESSED = 0x01
-    PBM_ENCRYPTED = 0x02
 
     dt = np.dtype([
         ("address", np.uint32, 1), ("datasize", np.uint32, 1), ("pagesize", np.uint32, 1),
@@ -143,7 +147,7 @@ class SuperData(object):
         out += (self.pagesize or np.uint32(0)).tobytes()
         out += (self.origsize or np.uint32(0)).tobytes()
         out += self.mode.tobytes()
-        out += (self.attributes or np.uint8(0)).tobytes()
+        out += (self.attributes or np.uint8(self.FILE_ATTRIBUTE_NORMAL)).tobytes()
         out += (self.page or np.uint16(0)).tobytes()
         out += (self.modified or FileTime(0)).tobytes()
         out += (self.filecrc or np.uint16(0)).tobytes()
