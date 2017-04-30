@@ -4,7 +4,9 @@ import numpy as np
 
 from paperbak.type_checking import auto_attr_check
 
+
 class TestAutoAttrCheckDecorator(unittest.TestCase):
+
     def setUp(self):
         @auto_attr_check
         class Test(object):
@@ -14,8 +16,8 @@ class TestAutoAttrCheckDecorator(unittest.TestCase):
                 "type_2": (bool, False, False),  # None won't be valid value
                 "type_2_ex2": (bool, False, True),  # None will be valid value
                 "type_2_def": (bool, False, False),
-                "type_3": False, # Read only with default None
-                "type_3_def": False, # Read only
+                "type_3": False,  # Read only with default None
+                "type_3_def": False,  # Read only
                 "type_4": (False, 42),  # Read only with default 42
                 "type_4_def": (False, 21),
                 "type_5": np.uint8,  # Default will be None
@@ -107,12 +109,6 @@ class TestAutoAttrCheckDecorator(unittest.TestCase):
             self.cls_inst.type_3 = 1
         self.assertEqual(self.cls_inst.type_3, None)
 
-    @unittest.skip("__type_3 can't be find on Test object under unittest.")
-    def test_type_3_set(self):
-        """Test that type_3 can be set via __type_3"""
-        self.cls_inst.__type_3 = 1
-        self.assertEqual(self.cls_inst.type_3, 1)
-
     def test_type_3_def(self):
         """Test that type_3 get default from attribute."""
         self.assertEqual(self.cls_inst.type_3_def, 0x55555555)
@@ -127,12 +123,6 @@ class TestAutoAttrCheckDecorator(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.cls_inst.type_4 = 1
         self.assertEqual(self.cls_inst.type_4, 42)
-
-    @unittest.skip("__type_4 can't be find on Test object under unittest.")
-    def test_type_4_set(self):
-        """Test that type_4 can be set via __type_4"""
-        self.cls_inst.__type_4 = 1
-        self.assertEqual(self.cls_inst.type_4, 1)
 
     def test_type_4_def(self):
         """Test that type_4 get default from attribute."""
@@ -169,7 +159,7 @@ class TestAutoAttrCheckDecorator(unittest.TestCase):
         class TestWrongParams(object):
             params = {
                 "correct": np.uint8,
-                "incorrect": (1,2,3,4)
+                "incorrect": (1, 2, 3, 4)
             }
 
         with self.assertRaises(AttributeError):
