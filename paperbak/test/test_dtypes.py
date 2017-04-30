@@ -5,6 +5,7 @@ from paperbak.dtypes import FileTime
 
 
 class TestFileTime(unittest.TestCase):
+
     def test_new(self):
         """Test that 1/1/1970 equals to FileTime.EPOCH_DIFF*FileTime.N100_NSEC_IN_SEC."""
         self.assertEqual(FileTime(datetime(1970, 1, 1, tzinfo=timezone.utc)),

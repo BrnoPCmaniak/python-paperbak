@@ -2,7 +2,9 @@ import unittest
 
 from paperbak import utils
 
+
 class TestUtilsFunctions(unittest.TestCase):
+
     def test_hex_0(self):
         """Test output of hex(0),"""
         self.assertEqual("0x00", utils.hex(0))

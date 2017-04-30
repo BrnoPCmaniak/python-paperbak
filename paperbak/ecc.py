@@ -76,21 +76,22 @@ INDEX = bytes([
 ])
 
 POLY = bytes([
-      0,  249,   59,   66,    4,   43,  126,  251,
-     97,   30,    3,  213,   50,   66,  170,    5,
-     24,    5,  170,   66,   50,  213,    3,   30,
-     97,  251,  126,   43,    4,   66,   59,  249,
-      0
+    0,  249,   59,   66,    4,   43,  126,  251,
+    97,   30,    3,  213,   50,   66,  170,    5,
+    24,    5,  170,   66,   50,  213,    3,   30,
+    97,  251,  126,   43,    4,   66,   59,  249,
+    0
 ])
+
 
 def encode8(data):
     bb = bytearray(32)
     for i in range(len(data)):
-        feedback = INDEX[data[i]^bb[0]]
+        feedback = INDEX[data[i] ^ bb[0]]
         if feedback != 255:
             for j in range(1, 32):
-                bb[j] ^= ALPHA[(feedback+POLY[32-j])%255]
+                bb[j] ^= ALPHA[(feedback + POLY[32 - j]) % 255]
         bb[:-1] = bb[1:]
-        bb[31] = 0 if feedback == 255 else ALPHA[(feedback+POLY[0])%255]
+        bb[31] = 0 if feedback == 255 else ALPHA[(feedback + POLY[0]) % 255]
 
     return bb
