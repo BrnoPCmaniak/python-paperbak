@@ -129,7 +129,7 @@ class SuperData(object):
             out |= np.uint8(self.PBM_COMPRESSED)
         return out
 
-    def tobytes(self, with_crc=False, with_ecc=False):
+    def tobytes(self, with_crc=True, with_ecc=True):
         """Convert datastructure into bytes.
 
         :param with_crc: Include Cyclic redundancy
@@ -158,12 +158,12 @@ class SuperData(object):
 
     def calc_crc(self):
         """Calculate cyclic redundancy of addr and data."""
-        self.crc = crc16(self.tobytes()) ^ 0x55AA
+        self.crc = crc16(self.tobytes(False, False)) ^ 0x55AA
 
     def calc_ecc(self):
         """Calculate Reed-Solomon's error correction code."""
         assert self.crc != None, "CRC not calculated yet."
-        self.ecc = encode8(self.tobytes(with_crc=True))
+        self.ecc = encode8(self.tobytes(with_ecc=False))
 
     @classmethod
     def frombytes(cls, bytes_):
