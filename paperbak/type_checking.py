@@ -26,17 +26,23 @@ def auto_attr_check(cls):
     >>> @auto_attr_check
     >>> class Test(object):
     >>>     params = {
-    >>>         "foo": (np.uint32, 0),
-    >>>         "data": (bytes, bytes(32)),
-    >>>         "bar": np.uint8,  # Default will be None
-    >>>         "foo2": (bool, False, True)  # None won't be valid value
-    >>>         "bar2": bool,
-    >>>         "read": False, # Read only with default None
-    >>>         "only": (False, 42)  # Read only with default 42
-    >>>
+    >>>         "type_1": (np.uint32, 0),
+    >>>         "type_1_def": (np.uint32, 0),
+    >>>         "type_2": (bool, False, False),  # None won't be valid value
+    >>>         "type_2_ex2": (bool, False, True),  # None will be valid value
+    >>>         "type_2_def": (bool, False, False),
+    >>>         "type_3": False, # Read only with default None
+    >>>         "type_3_def": False, # Read only
+    >>>         "type_4": (False, 42),  # Read only with default 42
+    >>>         "type_4_def": (False, 21),
+    >>>         "type_5": np.uint8,  # Default will be None
+    >>>         "type_5_def": bool,
     >>>     }
-    >>>     bar2 = False  # set default for bar2
-    >>>     read = 0x55555555  # set default for read
+    >>>     type_1_def = 2
+    >>>     type_2_def = True
+    >>>     type_3_def = 0x55555555  # set default for type_3
+    >>>     type_4_def = False  # set default for type_3
+    >>>     type_5_def = False  # set default for type_5_def
     """
     def getter_setter_gen(name, type_, can_be_None=True, read_only=False):
         def getter(self):
@@ -53,6 +59,8 @@ def auto_attr_check(cls):
         return property(getter, setter)
 
     new_dict = dict(cls.__dict__)
+    if not hasattr(cls, "params"):
+        raise AttributeError("Params dictionary is missing")
     for key, value in cls.params.items():
         if isinstance(value, tuple):
             if isinstance(value[0], type) and len(value) == 2:  # case 1
