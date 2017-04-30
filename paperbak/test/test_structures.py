@@ -1,6 +1,9 @@
 import unittest
+from datetime import datetime
 
-from paperbak.structures import Data
+import numpy as np
+
+from paperbak.structures import Data, SuperData
 
 from . import TEST_DATA
 
@@ -28,6 +31,10 @@ class TestData(unittest.TestCase):
         ]
         self.assertEqual(self.data.tobytes(False, False), bytes(data))
 
+    def test_tobytes_len(self):
+        """Test that tobytes have correct len."""
+        self.assertEqual(len(self.data.tobytes(True, True)), 128)
+
     def test_calc_crc(self):
         """Test that CRC16 matches to new_cpp/test_t_data_crc_ecc.cpp."""
         self.data.calc_crc()
@@ -47,10 +54,6 @@ class TestData(unittest.TestCase):
         self.data.calc_crc()
         self.data.calc_ecc()
         self.assertEqual(self.data.ecc, bytes(data))
-
-    def test_tobytes_len(self):
-        """Test that tobytes have correct len."""
-        self.assertEqual(len(self.data.tobytes(True, True)), 128)
 
     def test__eq__self(self):
         """Test that object equals to itself."""
@@ -83,13 +86,186 @@ class TestData(unittest.TestCase):
         """Test that two objects with different crc doesn't equal."""
         self.data2.calc_crc()
         self.data2.calc_ecc()
-        self.data2.crc = self.data.crc
+        self.data.crc = self.data2.crc
         self.assertNotEqual(self.data, self.data2)
 
     def test_from_bytes(self):
-        """Test that we can recontstruct address back from bytes."""
+        """Test that we can recontstruct block back from bytes."""
         # We have to calculate crc and ecc beacause otherwise ecc and crc would be converted
         # from None to 0
         self.data.calc_crc()
         self.data.calc_ecc()
         self.assertEqual(self.data, Data.frombytes(self.data.tobytes()))
+
+
+class TestSuperData(unittest.TestCase):
+
+    def setUp(self):
+        self.superdata = SuperData()
+        self.superdata.datasize = 90
+        self.superdata.pagesize = 1
+        self.superdata.origsize = 90
+        self.superdata.pbm_compressed = True
+        self.superdata.attributes = 5
+        self.superdata.page = 1
+        self.superdata.modified = datetime.fromtimestamp(1483228800)
+        self.superdata.filecrc = 31055
+        self.superdata.name = "README.txt"
+
+        self.superdata2 = SuperData()
+        self.superdata2.datasize = 90
+        self.superdata2.pagesize = 1
+        self.superdata2.origsize = 90
+        self.superdata2.pbm_compressed = True
+        self.superdata2.attributes = 5
+        self.superdata2.page = 1
+        self.superdata2.modified = datetime.fromtimestamp(1483228800)
+        self.superdata2.filecrc = 31055
+        self.superdata2.name = "README.txt"
+
+    def test_mode_0(self):
+        """Test that mode property returns 0 when all pbm_* are off."""
+        superdata = SuperData()
+        self.assertEqual(superdata.mode, 0)
+        self.assertEqual(type(superdata.mode), np.uint8)
+
+    def test_mode_compress(self):
+        """Test that if pbm_compressed is True mode is 1."""
+        superdata = SuperData()
+        superdata.pbm_compressed = True
+        self.assertEqual(superdata.mode, 1)
+        self.assertEqual(type(superdata.mode), np.uint8)
+
+    def test_mode_encrypted(self):
+        """Test that if pbm_encrypted is True mode is 2."""
+        superdata = SuperData()
+        superdata.pbm_encrypted = True
+        self.assertEqual(superdata.mode, 2)
+        self.assertEqual(type(superdata.mode), np.uint8)
+
+    def test_mode_compress_encrypted(self):
+        """Test that if pbm_encrypted and pbm_compressed is True mode is 2."""
+        superdata = SuperData()
+        superdata.pbm_compressed = True
+        superdata.pbm_encrypted = True
+        self.assertEqual(superdata.mode, 3)
+        self.assertEqual(type(superdata.mode), np.uint8)
+
+    def test_tobytes(self):
+        """Test that tobytes matches to new_cpp/test_t_superdata_crc_ecc.cpp."""
+        data = [
+            0xff, 0xff, 0xff, 0xff, 0x5a, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x5a, 0x00,
+            0x00, 0x00, 0x01, 0x05, 0x01, 0x00, 0x00, 0xc0, 0xb0, 0xfe, 0xc1, 0x63, 0xd2, 0x01,
+            0x4f, 0x79, 0x52, 0x45, 0x41, 0x44, 0x4d, 0x45, 0x2e, 0x74, 0x78, 0x74, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ]
+        self.assertEqual(self.superdata.tobytes(False, False), bytes(data))
+
+    def test_tobytes_len(self):
+        """Test that tobytes have correct len."""
+        self.assertEqual(len(self.superdata.tobytes(True, True)), 128)
+
+    def test_calc_crc(self):
+        """Test that CRC16 matches to new_cpp/test_t_superdata_crc_ecc.cpp."""
+        self.superdata.calc_crc()
+        self.assertEqual(self.superdata.crc, 39063)
+
+    def test_calc_ecc_assert(self):
+        """Test that calc_ecc raises AssertionError if ecc is empty."""
+        self.assertRaises(AssertionError, self.superdata.calc_ecc)
+
+    def test_calc_ecc(self):
+        """Test that ECC matches to new_cpp/test_t_superdata_crc_ecc.cpp."""
+        data = [
+            0x80, 0x48, 0x36, 0xea, 0x19, 0xf7, 0xc4, 0x0b, 0xf9, 0xa0, 0xf8, 0x6d, 0x6a, 0x20,
+            0x7b, 0x5c, 0xf0, 0x6d, 0xb6, 0x76, 0x63, 0x66, 0x9d, 0x28, 0xd1, 0xbf, 0x72, 0x2c,
+            0x01, 0x31, 0x15, 0x96,
+        ]
+        self.superdata.calc_crc()
+        self.superdata.calc_ecc()
+        self.assertEqual(self.superdata.ecc, bytes(data))
+
+    def test__eq__self(self):
+        """Test that object equals to itself."""
+        self.assertEqual(self.superdata, self.superdata)
+
+    def test__eq__(self):
+        """Test that two objects equals."""
+        self.assertEqual(self.superdata, self.superdata2)
+
+    def test__eq__empty(self):
+        """Test that two empty objects equals."""
+        self.assertEqual(SuperData(), SuperData())
+
+    def test__eq__datasize(self):
+        """Test that two objects with different datasize doesn't equal."""
+        self.superdata2.datasize = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__pagesize(self):
+        """Test that two objects with different pagesize doesn't equal."""
+        self.superdata2.pagesize = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__origsize(self):
+        """Test that two objects with different origsize doesn't equal."""
+        self.superdata2.origsize = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__pbm_compressed(self):
+        """Test that two objects with different pbm_compressed doesn't equal."""
+        self.superdata2.pbm_compressed = False
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__pbm_encrypted(self):
+        """Test that two objects with different pbm_encrypted doesn't equal."""
+        self.superdata.pbm_encrypted = True
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__attributes(self):
+        """Test that two objects with different attributes doesn't equal."""
+        self.superdata2.attributes = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__page(self):
+        """Test that two objects with different page doesn't equal."""
+        self.superdata2.page = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__modified(self):
+        """Test that two objects with different modified doesn't equal."""
+        self.superdata2.modified = datetime.fromtimestamp(0)
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__filecrc(self):
+        """Test that two objects with different filecrc doesn't equal."""
+        self.superdata2.filecrc = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__name(self):
+        """Test that two objects with different name doesn't equal."""
+        self.superdata2.name = None
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__crc(self):
+        """Test that two objects with different crc doesn't equal."""
+        self.superdata2.calc_crc()
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test__eq__ecc(self):
+        """Test that two objects with different crc doesn't equal."""
+        self.superdata2.calc_crc()
+        self.superdata2.calc_ecc()
+        self.superdata.crc = self.superdata2.crc
+        self.assertNotEqual(self.superdata, self.superdata2)
+
+    def test_from_bytes(self):
+        """Test that we can recontstruct block back from bytes."""
+        # We have to calculate crc and ecc beacause otherwise ecc and crc would be converted
+        # from None to 0
+        self.superdata.calc_crc()
+        self.superdata.calc_ecc()
+        self.assertEqual(self.superdata, SuperData.frombytes(self.superdata.tobytes()))
