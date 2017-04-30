@@ -1,5 +1,8 @@
 # Python PaperBack
 
+[![Build Status](https://travis-ci.org/BrnoPCmaniak/python-paperbak.svg?branch=master)](https://travis-ci.org/BrnoPCmaniak/python-paperbak)
+[![Coverage Status](https://coveralls.io/repos/github/BrnoPCmaniak/python-paperbak/badge.svg?branch=master)](https://coveralls.io/github/BrnoPCmaniak/python-paperbak?branch=master)
+
 This project aims to port https://github.com/Rupan/paperbak into python cross-platform application.
 
 ## Current state:
