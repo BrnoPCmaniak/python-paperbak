@@ -1,3 +1,5 @@
+from os import stat
+
 import numpy as np
 
 from paperbak.constants import NDATA, SUPERBLOCK
@@ -97,7 +99,6 @@ class SuperData(object):
     """
     PBM_COMPRESSED = 0x01
     PBM_ENCRYPTED = 0x02
-    FILE_ATTRIBUTE_NORMAL = 0x80
 
 
     address = np.uint32(SUPERBLOCK)
@@ -108,7 +109,7 @@ class SuperData(object):
         "origsize": np.uint32,
         "pbm_compressed": (bool, False, False),
         "pbm_encrypted": (bool, False, False),
-        "attributes": (np.uint8, np.uint8(FILE_ATTRIBUTE_NORMAL)),
+        "attributes": (np.uint8, np.uint8(stat.FILE_ATTRIBUTE_NORMAL)),
         "page": np.uint16,
         "modified": FileTime,
         "filecrc": np.uint16,
@@ -147,7 +148,7 @@ class SuperData(object):
         out += (self.pagesize or np.uint32(0)).tobytes()
         out += (self.origsize or np.uint32(0)).tobytes()
         out += self.mode.tobytes()
-        out += (self.attributes or np.uint8(self.FILE_ATTRIBUTE_NORMAL)).tobytes()
+        out += (self.attributes or np.uint8(stat.FILE_ATTRIBUTE_NORMAL)).tobytes()
         out += (self.page or np.uint16(0)).tobytes()
         out += (self.modified or FileTime(0)).tobytes()
         out += (self.filecrc or np.uint16(0)).tobytes()
