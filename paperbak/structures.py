@@ -1,4 +1,4 @@
-from os import stat
+import stat
 
 import numpy as np
 

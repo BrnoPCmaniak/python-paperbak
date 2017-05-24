@@ -1,11 +1,11 @@
 import bz2
 import datetime
 import os
-from os.stat import (FILE_ATTRIBUTE_ARCHIVE, FILE_ATTRIBUTE_HIDDEN,
-                     FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_READONLY,
-                     FILE_ATTRIBUTE_SYSTEM)
+from stat import (
+    FILE_ATTRIBUTE_ARCHIVE, FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_READONLY,
+    FILE_ATTRIBUTE_SYSTEM)
 
-from paperbak.constants import MAXSIZE, NGROUP, NGROUPMAX, NGROUPMIN, NDOT, NDATA
+from paperbak.constants import MAXSIZE, NDATA, NDOT, NGROUP, NGROUPMAX, NGROUPMIN
 from paperbak.crc16 import crc16
 from paperbak.structures import SuperData
 
