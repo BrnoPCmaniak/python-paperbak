@@ -500,6 +500,7 @@ static void Encryptdata(t_printdata *print) {
 // Prepares for printing. Despite its size, this routine is very quick.
 static void Initializeprinting(t_printdata *print) {
   int i,dx,dy,px,py,nx,ny,width,height,success,rastercaps;
+  // http://docwiki.embarcadero.com/RADStudio/Seattle/en/MAXxxxx_defines_(fnsplit)
   char fil[MAXPATH],nam[MAXFILE],ext[MAXEXT],jobname[TEXTLEN];
   BITMAPINFO *pbmi;
   SIZE extent;
@@ -520,6 +521,9 @@ static void Initializeprinting(t_printdata *print) {
     FILE_ATTRIBUTE_NORMAL));
   print->superdata.modified=print->modified;
   print->superdata.filecrc=(ushort)print->bufcrc;
+  // Get only name and extension of file
+  // http://docwiki.embarcadero.com/RADStudio/Seattle/en/Fnsplit,_wfnsplit
+  // http://docwiki.embarcadero.com/RADStudio/Seattle/en/Fnmerge,_wfnmerge
   fnsplit(print->infile,NULL,NULL,nam,ext);
   fnmerge(fil,NULL,NULL,nam,ext);
   // Note that name in superdata may be not null-terminated.
@@ -698,7 +702,7 @@ static void Initializeprinting(t_printdata *print) {
   pbmi->bmiHeader.biCompression=BI_RGB;
   pbmi->bmiHeader.biSizeImage=0;
   pbmi->bmiHeader.biXPelsPerMeter=0;
-  pbmi->bmiHeader.biYPelsPerMeter=0;      
+  pbmi->bmiHeader.biYPelsPerMeter=0;
   pbmi->bmiHeader.biClrUsed=256;
   pbmi->bmiHeader.biClrImportant=256;
   for (i=0; i<256; i++) {
@@ -984,7 +988,7 @@ static void Printnextpage(t_printdata *print) {
       if (WriteFile(hbmpfile,bits,width*height,&u,NULL)==0 ||
         u!=(ulong)(width*height))
         success=0;
-      ;  
+      ;
     };
     CloseHandle(hbmpfile);
     if (success==0) {
@@ -1045,4 +1049,3 @@ void Printfile(char *path,char *bmp) {
   printdata.step=1;
   Updatebuttons();
 };
-

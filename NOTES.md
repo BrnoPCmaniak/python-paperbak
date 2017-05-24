@@ -11,3 +11,7 @@
 - [ ] `Printer.cpp` - Printer UI + Drawing data into bitmap
 - [ ] `Scanner.cpp` - Scanner UI + Load Bitmap
 - [ ] `Service.cpp` - File related routines + Queue
+
+# Useful links
+
+* How to set file attributes in python http://stackoverflow.com/a/28519209/2629036 
