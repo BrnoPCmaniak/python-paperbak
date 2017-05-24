@@ -77,6 +77,15 @@ class FilePrinter:
             raise ValueError("Name is too long.")
 
     def get_file_info(self):
+        """Get metadtata of file.
+
+        Metadata:
+        * Attributes
+        * Time of last modification
+        * Size
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L276-L297  #NOQA
+        """
         result = os.stat(self.path)
         self.attributes = getattr(result, "st_file_attributes", FILE_ATTRIBUTE_NORMAL)
         self.mtime = datetime.utcfromtimestamp(result.st_mtime)
@@ -85,6 +94,10 @@ class FilePrinter:
             raise ValueError("File is too big.")
 
     def compress_data(self):
+        """Compress the file data by bzip2.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L325-L429  #NOQA
+        """
         self.data = bz2.compress(self.data, compresslevel=self.compression_level)
         self.datasize = len(self.data)
 
@@ -92,6 +105,10 @@ class FilePrinter:
         self.filecrc = crc16(self.data)
 
     def make_superdata(self):
+        """Prepare superdata block.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L510-L531  #NOQA
+        """
         self.superdata = SuperData()
         self.superdata.datasize = self.alignedsize
         self.superdata.origsize = self.origsize
@@ -111,6 +128,10 @@ class FilePrinter:
             self.superdata.name = self.name
 
     def calc_page_size(self):
+        """Calculate the page size in px from printer resolution.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L630-L635  #NOQA
+        """
         if self.in_hundredths_of_milimeters:
             self.width = self.pagesizex * self.resx / 2540
             self.height = self.papersizey * self.resy / 2540
@@ -119,7 +140,10 @@ class FilePrinter:
             self.height = self.papersizey * self.resy / 1000
 
     def calc_borders(self):
-        """Calculate page borders in the pixels of printer's resolution."""
+        """Calculate page borders in the pixels of printer's resolution.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L646-L660  #NOQA
+        """
         if self.have_margins:
             if self.in_hundredths_of_milimeters:
                 self.borderleft = self.marginleft * self.resx / 2540
@@ -138,10 +162,13 @@ class FilePrinter:
             self.borderbottom = self.resy / 2
 
     def calc_printable_area(self):
-        """Calculate size of printable area, in the pixels of printer's resolution."""
+        """Calculate size of printable area, in the pixels of printer's resolution.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L661-L665  #NOQA
+        """
         self.printable_width = self.width - (self.borderleft + self.borderright)
-        self.printable_height = self.height - (self.bordertop + self.borderbottom)
-        # + self.extratop + self.extrabottom
+        self.printable_height = self.height - \
+            (self.bordertop + self.borderbottom + self.extratop + self.extrabottom)
 
     def calc_dot_size(self):
         """Calculate data point raster and size of point.
@@ -149,6 +176,8 @@ class FilePrinter:
         Calculate data point raster (dx,dy) and size of the point (px,py) in the
         pixels of printer's resolution. Note that pixels, at least in theory, may
         be non-rectangular.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L666-L672  #NOQA
         """
 
         self.dx = max(self.resx / self.dpi, 2)
@@ -157,7 +186,10 @@ class FilePrinter:
         self.py = max((self.dy * self.dotpercent) / 100, 1)
 
     def calc_border(self):
-        """Calculate width of the border around the data grid."""
+        """Calculate width of the border around the data grid.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L673-L679  #NOQA
+        """
         self.border = self.sx * 16 if self.printborder else 0
 
     def calc_number_of_blocks(self):
@@ -166,6 +198,8 @@ class FilePrinter:
         Single page must contain at least redundancy data blocks plus 1 recovery checksum,
         and redundancy+1 superblocks with name and size of the data. Data and recovery blocks
         should be placed into different columns.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L680-L689  #NOQA
         """
         self.nx = (self.printable_width - self.px - 2 * self.border) / \
             (NDOT * self.dx + 3 * self.dx)
@@ -176,7 +210,10 @@ class FilePrinter:
             raise ValueError("Printable area is too small, reduce borders or block size.")
 
     def calc_bitmap_size(self):
-        """Calculate final size of the bitmap where to draw the image."""
+        """Calculate final size of the bitmap where to draw the image.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L690-L692  #NOQA
+        """
         self.bitmap_width = (self.nx * (NDOT + 3) * self.dx +
                              self.px + 2 * self.border + 3) & 0xFFFFFFFC
         self.bitmap_height = self.ny * (NDOT + 3) * self.dy + self.py + 2 * self.border
@@ -187,6 +224,8 @@ class FilePrinter:
         For each redundancy blocks, I create one recovery block. For each chain, I
         create one superblock that contains file name and size, plus at least one
         superblock at the end of the page.
+
+        https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L730-L736  #NOQA
         """
         self.pagesize = ((self.nx * self.ny - self.redundancy - 2) /
                          (self.redundancy + 1)) * self.redundancy * NDATA
@@ -212,10 +251,12 @@ class FilePrinter:
 
         # Align size of (compressed) data to next 16-byte border. Note that bzip2
         # doesn't mind if data passed to decompressor is longer than expected.
+        # https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L415-L420  #NOQA
         self.alignedsize = (self.datasize + 15) & 0xFFFFFFF0
         self.data = self.data + bytes(self.alignedsize)
 
         # TODO: encryption
+        # https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L431-L498  #NOQA
         if self.encrypted:
             raise NotImplemented("Encryption is not implemented yet.")
 
@@ -223,6 +264,7 @@ class FilePrinter:
         self.make_superdata()
         self.calc_page_size()
         # TODO: Calculate height of title and info lines on the paper. If printheader or printborder
+        # https://github.com/BrnoPCmaniak/python-paperbak/blob/dfba2a395bfeec4dafe9566afa4eb96c68771423/old_cpp/Printer.cpp#L584-L616  #NOQA
         self.calc_borders()
         self.calc_printable_area()
         self.calc_dot_size()
